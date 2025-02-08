@@ -6,7 +6,7 @@ function App() {
  const [recipes, setRecipes] = useState([]);
  const  [input , setInput] = useState('')
  const [showResult , setShowResult] =  useState(false)
- 
+ const [cache , setCache]   = useState({})
 
   const inputHandle = (e)=>{
     setInput(
@@ -14,13 +14,24 @@ function App() {
     )
   }
   const fetchData = async () => {
+    if(cache[input]){
+      console.log('from cache',input)
+      setRecipes(cache[input])
+      return
+    }
+    console.log('from api ', input)
     const data = await fetch("https://dummyjson.com/recipes/search?q=" +input);
     const jsonData = await data.json();
-    setRecipes(jsonData.recipes);
+    setRecipes(jsonData?.recipes);
+    setCache(prevState => ({...prevState , [input] : jsonData?.recipes }))
   };
   useEffect(() => {
-    fetchData();
+    const timer  =  setTimeout(fetchData,300)
+     return ()=>{
+        clearTimeout(timer)
+     }
   }, [input]);
+
 
   return (
     <div className="container">
@@ -36,7 +47,7 @@ function App() {
         </div>
         {showResult &&  <div className="result-container">
         {recipes.map((data) => (
-          <div className="result">
+          <div   key = {data.id}  className="result">
              <span> {data.name}</span>
           </div>
         ))}
